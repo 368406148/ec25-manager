@@ -1,6 +1,6 @@
 # EC25 Manager for macOS (a vibe coding project)
 
-本项目仅为个人实验用途，严禁用于各类违法用途。使用工具请后果自负。程序完全使用开放的接口实现，没有进行任何逆向研究。
+**本项目仅为个人实验用途，严禁用于各类违法用途。使用工具请后果自负。程序完全使用开放的接口实现，没有进行任何逆向研究。**
 
 一个面向移远 Quectel EC25 / Baiwang USB Modem 的 **macOS 菜单栏（menu bar）管理工具**，使用 Electron 构建 GUI，底层通过原生
 `libusb` 直接访问 AT bulk 接口。
