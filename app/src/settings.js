@@ -12,7 +12,7 @@ const DEFAULTS = {
   visibleFields: [
     'dataNetworkType', 'operator', 'regEPS', 'imei', 'imsi', 'iccid',
     'simStatus', 'ownNumber', 'rsrp', 'rsrq', 'sinr', 'modulation',
-    'band', 'freq', 'qos', 'usbnet'
+    'temp', 'band', 'freq', 'qos', 'usbnet'
   ]
 }
 

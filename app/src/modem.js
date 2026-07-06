@@ -165,7 +165,7 @@ function emptyInfo () {
     registration: '-', gprsRegistration: '-', epsRegistration: '-',
     packetAttached: '-', activePdp: '-', pdpAddress: '-',
     dataNetworkType: '-', networkLabel: '-', servingCell: '-', carrierAggregation: '-',
-    usbNetworkMode: '-', apnProfiles: [], currentApn: '-', band: '-', channel: '-',
+    usbNetworkMode: '-', apnProfiles: [], currentApn: '-', temperature: '-', band: '-', channel: '-',
     // serving-cell derived metrics
     rsrp: '-', rsrq: '-', rssiDbm: '-', sinr: '-', cqi: '-', modulation: '-',
     dlBandwidth: '-', ulBandwidth: '-', pci: '-', cellId: '-', tac: '-',
@@ -514,6 +514,7 @@ class ModemManager extends EventEmitter {
     const usbNetworkMode = await this._query('USB 网络模式', 'AT+QCFG="usbnet"')
     const apnProfiles = await this._query('APN/PDP 配置', 'AT+CGDCONT?', 8000)
     const qosLines = await this._query('QoS', 'AT+CGEQOSRDP')
+    const temperature = await this._query('温度', 'AT+QTEMP')
 
     const csq = this._parseSignal(signal)
     const net = this._parseNetworkType(networkInfo)
@@ -571,7 +572,8 @@ class ModemManager extends EventEmitter {
       tac: cell.tac ?? '-',
       earfcn: earfcn ?? '-',
       freqMhz: freq != null ? `${freq} MHz` : '-',
-      qos: this._parseQos(qosLines)
+      qos: this._parseQos(qosLines),
+      temperature: this._parseTemperature(temperature)
     }
     this.emitUpdate()
   }
@@ -841,6 +843,20 @@ class ModemManager extends EventEmitter {
       }
     }
     return '不可用'
+  }
+
+  // AT+QTEMP -> hottest sensor in °C. Handles both bare "37,34,34" and
+  // "name",value pairs; ignores non-temperature tokens.
+  _parseTemperature (lines) {
+    const line = firstLine(lines, '+QTEMP:')
+    if (!line) return '-'
+    const nums = csvParts(line.replace('+QTEMP:', ''))
+      .map((p) => trimQuotes(p).trim())
+      .filter((p) => /^-?\d+$/.test(p))
+      .map(Number)
+      .filter((n) => n > -50 && n < 200)
+    if (!nums.length) return '-'
+    return `${Math.max(...nums)} °C`
   }
 
   _parseUSBNetworkMode (lines) {
