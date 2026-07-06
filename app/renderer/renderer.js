@@ -37,7 +37,6 @@ const FIELD_CATALOG = [
   { key: 'pci', label: 'PCI', get: (i) => i.pci },
   { key: 'cellId', label: 'Cell ID', mono: true, get: (i) => i.cellId },
   { key: 'tac', label: 'TAC', get: (i) => i.tac },
-  { key: 'qos', label: 'QoS 级别', wide: true, get: (i) => i.qos },
   { key: 'temp', label: '模组温度', get: (i) => i.temperature },
   { key: 'tempAvg', label: '平均温度', get: (i) => i.temperatureAvg },
   { key: 'ber', label: 'BER', get: (i) => i.ber },

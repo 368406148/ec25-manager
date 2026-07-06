@@ -101,13 +101,6 @@ const LTE_BANDS = {
   28: [758, 9210], 38: [2570, 37750], 39: [1880, 38250], 40: [2300, 38650], 41: [2496, 39650], 66: [2110, 66436]
 }
 
-// 3GPP standardized QCI -> human label.
-const QCI_DESC = {
-  1: '会话语音', 2: '会话视频', 3: '实时游戏', 4: '非会话视频',
-  5: 'IMS 信令', 6: 'TCP(视频/网页)', 7: '语音/视频/游戏', 8: 'TCP(视频/网页)',
-  9: '默认承载(上网)', 65: '任务关键语音', 66: '非任务关键推送', 69: '任务关键信令', 70: '任务关键数据'
-}
-
 function earfcnToDlMhz (band, earfcn) {
   const b = LTE_BANDS[Number(band)]
   const n = Number(earfcn)
@@ -169,7 +162,7 @@ function emptyInfo () {
     // serving-cell derived metrics
     rsrp: '-', rsrq: '-', rssiDbm: '-', sinr: '-', cqi: '-', modulation: '-',
     dlBandwidth: '-', ulBandwidth: '-', pci: '-', cellId: '-', tac: '-',
-    earfcn: '-', freqMhz: '-', qos: '-'
+    earfcn: '-', freqMhz: '-'
   }
 }
 
@@ -513,7 +506,6 @@ class ModemManager extends EventEmitter {
     const carrierAggregation = await this._query('载波聚合', 'AT+QCAINFO', 8000)
     const usbNetworkMode = await this._query('USB 网络模式', 'AT+QCFG="usbnet"')
     const apnProfiles = await this._query('APN/PDP 配置', 'AT+CGDCONT?', 8000)
-    const qosLines = await this._query('QoS', 'AT+CGEQOSRDP')
     const temperature = await this._query('温度', 'AT+QTEMP')
 
     const csq = this._parseSignal(signal)
@@ -573,7 +565,6 @@ class ModemManager extends EventEmitter {
       tac: cell.tac ?? '-',
       earfcn: earfcn ?? '-',
       freqMhz: freq != null ? `${freq} MHz` : '-',
-      qos: this._parseQos(qosLines),
       temperature: temp.all,
       temperatureAvg: temp.avg
     }
@@ -832,19 +823,6 @@ class ModemManager extends EventEmitter {
       sinr: num(parts[16]),
       cqi: num(parts[17])
     }
-  }
-
-  // Parse AT+CGEQOSRDP -> the default bearer's QCI, if the network reports it.
-  _parseQos (lines) {
-    const entries = lines.filter((l) => l.includes('+CGEQOSRDP:'))
-    for (const l of entries) {
-      const parts = csvParts(l.replace('+CGEQOSRDP:', ''))
-      const qci = parseInt(trimmed(parts[1] ?? ''), 10)
-      if (Number.isFinite(qci) && qci > 0) {
-        return `QCI ${qci}${QCI_DESC[qci] ? ' · ' + QCI_DESC[qci] : ''}`
-      }
-    }
-    return '不可用'
   }
 
   // AT+QTEMP -> { all: "37 / 34 / 34 °C", avg: "35 °C" }. Handles both bare
