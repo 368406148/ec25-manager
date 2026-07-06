@@ -39,6 +39,7 @@ const FIELD_CATALOG = [
   { key: 'tac', label: 'TAC', get: (i) => i.tac },
   { key: 'qos', label: 'QoS 级别', wide: true, get: (i) => i.qos },
   { key: 'temp', label: '模组温度', get: (i) => i.temperature },
+  { key: 'tempAvg', label: '平均温度', get: (i) => i.temperatureAvg },
   { key: 'ber', label: 'BER', get: (i) => i.ber },
   { key: 'usbnet', label: 'USB 模式', get: (i) => i.usbNetworkMode }
 ]

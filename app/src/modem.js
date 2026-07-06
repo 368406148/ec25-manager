@@ -165,7 +165,7 @@ function emptyInfo () {
     registration: '-', gprsRegistration: '-', epsRegistration: '-',
     packetAttached: '-', activePdp: '-', pdpAddress: '-',
     dataNetworkType: '-', networkLabel: '-', servingCell: '-', carrierAggregation: '-',
-    usbNetworkMode: '-', apnProfiles: [], currentApn: '-', temperature: '-', band: '-', channel: '-',
+    usbNetworkMode: '-', apnProfiles: [], currentApn: '-', temperature: '-', temperatureAvg: '-', band: '-', channel: '-',
     // serving-cell derived metrics
     rsrp: '-', rsrq: '-', rssiDbm: '-', sinr: '-', cqi: '-', modulation: '-',
     dlBandwidth: '-', ulBandwidth: '-', pci: '-', cellId: '-', tac: '-',
@@ -519,6 +519,7 @@ class ModemManager extends EventEmitter {
     const csq = this._parseSignal(signal)
     const net = this._parseNetworkType(networkInfo)
     const cell = this._parseServingCell(servingCell)
+    const temp = this._parseTemperatures(temperature)
 
     // Prefer LTE band/EARFCN from the serving cell; fall back to QNWINFO.
     const band = cell.band ?? (net.band !== '-' ? net.band.replace(/[^0-9]/g, '') : '-')
@@ -573,7 +574,8 @@ class ModemManager extends EventEmitter {
       earfcn: earfcn ?? '-',
       freqMhz: freq != null ? `${freq} MHz` : '-',
       qos: this._parseQos(qosLines),
-      temperature: this._parseTemperature(temperature)
+      temperature: temp.all,
+      temperatureAvg: temp.avg
     }
     this.emitUpdate()
   }
@@ -845,18 +847,19 @@ class ModemManager extends EventEmitter {
     return '不可用'
   }
 
-  // AT+QTEMP -> hottest sensor in °C. Handles both bare "37,34,34" and
-  // "name",value pairs; ignores non-temperature tokens.
-  _parseTemperature (lines) {
+  // AT+QTEMP -> { all: "37 / 34 / 34 °C", avg: "35 °C" }. Handles both bare
+  // "37,34,34" and "name",value pairs; ignores non-temperature tokens.
+  _parseTemperatures (lines) {
     const line = firstLine(lines, '+QTEMP:')
-    if (!line) return '-'
+    if (!line) return { all: '-', avg: '-' }
     const nums = csvParts(line.replace('+QTEMP:', ''))
       .map((p) => trimQuotes(p).trim())
       .filter((p) => /^-?\d+$/.test(p))
       .map(Number)
       .filter((n) => n > -50 && n < 200)
-    if (!nums.length) return '-'
-    return `${Math.max(...nums)} °C`
+    if (!nums.length) return { all: '-', avg: '-' }
+    const avg = Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)
+    return { all: `${nums.join(' / ')} °C`, avg: `${avg} °C` }
   }
 
   _parseUSBNetworkMode (lines) {
