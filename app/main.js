@@ -45,7 +45,13 @@ function trayImageFor (state) {
 }
 
 function updateTray (state) {
-  if (!tray) return
+  // Optionally hide the menu-bar icon entirely while no modem is connected.
+  const hideWhenOff = settings && settings.get().hideWhenDisconnected
+  if (hideWhenOff && !state.connected) {
+    if (tray) { if (win) win.hide(); tray.destroy(); tray = null }
+    return
+  }
+  ensureTray()
   tray.setImage(trayImageFor(state))
   const info = state.info || {}
   const parts = state.connected
@@ -116,7 +122,8 @@ function toggleWindow () {
   win.webContents.send('state', modem.getState())
 }
 
-function buildTray () {
+function ensureTray () {
+  if (tray) return tray
   tray = new Tray(trayImageFor(modem.getState()))
   tray.setToolTip('EC25 Manager')
   tray.on('click', () => toggleWindow())
@@ -130,6 +137,7 @@ function buildTray () {
     ])
     tray.popUpContextMenu(menu)
   })
+  return tray
 }
 
 function restartTimers () {
@@ -165,6 +173,7 @@ function applySettings (partial) {
   const next = settings.update(partial || {})
   app.setLoginItemSettings({ openAtLogin: !!next.openAtLogin })
   restartTimers()
+  updateTray(modem.getState())   // apply "hide when disconnected" immediately
   if (win && !win.isDestroyed()) win.webContents.send('settings', next)
   return next
 }
@@ -205,8 +214,8 @@ app.whenReady().then(() => {
   modem = new ModemManager({ binaryPath: bin, env, dataDir: app.getPath('userData') })
 
   registerIpc()
-  buildTray()
   createWindow()
+  updateTray(modem.getState())   // creates the tray now unless "hide when disconnected" is on
   restartTimers()
 
   // After the Mac wakes from sleep the USB modem's ECM interface usually drops;

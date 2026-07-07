@@ -314,6 +314,7 @@ el('setLogin').addEventListener('change', () => saveSettings({ openAtLogin: el('
 el('setInfoPoll').addEventListener('change', () => saveSettings({ infoPollSeconds: parseInt(el('setInfoPoll').value, 10) }))
 el('setSmsPoll').addEventListener('change', () => saveSettings({ smsPollSeconds: parseInt(el('setSmsPoll').value, 10) }))
 el('setRestartWake').addEventListener('change', () => saveSettings({ restartOnWake: el('setRestartWake').checked }))
+el('setHideWhenOff').addEventListener('change', () => saveSettings({ hideWhenDisconnected: el('setHideWhenOff').checked }))
 
 async function saveSettings (partial) {
   settings = await window.api.setSettings(partial)
@@ -326,6 +327,7 @@ function applySettings (s) {
   el('setInfoPoll').value = String(s.infoPollSeconds)
   el('setSmsPoll').value = String(s.smsPollSeconds)
   el('setRestartWake').checked = !!s.restartOnWake
+  el('setHideWhenOff').checked = !!s.hideWhenDisconnected
   renderFieldToggles(s)
   if (lastState) renderGrid(lastState.info)
 }

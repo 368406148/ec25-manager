@@ -8,6 +8,7 @@ const DEFAULTS = {
   infoPollSeconds: 12,     // status/signal polling cadence (gentler on the modem)
   smsPollSeconds: 30,      // SMS polling cadence (0 = off)
   restartOnWake: true,     // after sleep, restart the module to restore the ECM network
+  hideWhenDisconnected: false, // only show the menu-bar icon while a modem is connected
   // #9 which overview fields to show, in order
   visibleFields: [
     'dataNetworkType', 'operator', 'regEPS', 'imei', 'imsi', 'iccid',
