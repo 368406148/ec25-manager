@@ -1,6 +1,6 @@
 {
   "name": "ec25-manager",
-  "version": "0.3.3",
+  "version": "0.3.2",
   "description": "EC25 / Baiwang USB modem manager for the macOS menu bar",
   "author": "nickspace",
   "license": "MIT",
