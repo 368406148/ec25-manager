@@ -330,18 +330,32 @@ class ModemManager extends EventEmitter {
   // Called by the poll timer when disconnected: quietly try to (re)open.
   attemptRecover () {
     return this._run(async () => {
-      if (!this.bridge.running) this.bridge.start()
-      let res
-      try {
-        res = await this.bridge.request('open', {}, 15000)
-      } catch {
-        return // device still absent; stay disconnected and retry next tick
+      if (!this.bridge.running) {
+        this.bridge.start()
+        this._recoverFails = 0
+      } else if ((this._recoverFails || 0) >= 2) {
+        // Helper is alive but unresponsive (wedged after a device drop) —
+        // restart it. Safe while disconnected: no live transfer to interrupt.
+        this._log('重启 helper（无响应）…')
+        this.bridge.stop()
+        this.bridge.start()
+        this._recoverFails = 0
+        return // give the fresh helper a tick before opening
       }
-      this.state.connected = true
-      this.state.usbDescription = res.description || this.state.usbDescription
-      this._log('设备已接入 ' + this.state.usbDescription)
-      await this._initialize()
-      this.state.lastUpdated = Date.now()
+      try {
+        const res = await this.bridge.request('open', {}, 10000)
+        this._recoverFails = 0
+        this.state.connected = true
+        this.state.usbDescription = res.description || this.state.usbDescription
+        this._log('设备已接入 ' + this.state.usbDescription)
+        await this._initialize()
+        this.state.lastUpdated = Date.now()
+      } catch (e) {
+        // A clean "device not found" means the helper is healthy (device just
+        // absent); only an unresponsive/timeout helper counts toward a restart.
+        const msg = String(e.message || e)
+        this._recoverFails = /超时|timeout/i.test(msg) ? (this._recoverFails || 0) + 1 : 0
+      }
     })
   }
 

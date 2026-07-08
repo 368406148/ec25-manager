@@ -17,28 +17,29 @@ class HelperBridge extends EventEmitter {
   }
 
   get running () {
-    return this.proc != null && this.proc.exitCode === null && !this.proc.killed
+    return this.proc != null
   }
 
   start () {
     if (this.running) return
-    this.proc = spawn(this.binaryPath, [], {
+    const child = spawn(this.binaryPath, [], {
       env: { ...process.env, ...this.env },
       stdio: ['pipe', 'pipe', 'pipe']
     })
+    this.proc = child
 
-    const rl = readline.createInterface({ input: this.proc.stdout })
+    const rl = readline.createInterface({ input: child.stdout })
     rl.on('line', (line) => this._onLine(line))
 
-    this.proc.stderr.on('data', (chunk) => this.emit('stderr', chunk.toString()))
-    this.proc.on('exit', (code) => {
-      this._failAll(`helper exited (code ${code})`)
-      this.emit('exit', code)
-    })
-    this.proc.on('error', (err) => {
-      this._failAll(err.message)
-      this.emit('error', err)
-    })
+    child.stderr.on('data', (chunk) => this.emit('stderr', chunk.toString()))
+    const onDead = (info) => {
+      // Clear proc so `running` is false and the next start() respawns.
+      // Guard against a late event from an already-replaced child.
+      if (this.proc === child) this.proc = null
+      this._failAll(typeof info === 'string' ? info : `helper exited (code ${info})`)
+    }
+    child.on('exit', (code) => { onDead(code); this.emit('exit', code) })
+    child.on('error', (err) => { onDead(err.message); this.emit('error', err) })
   }
 
   _onLine (line) {
