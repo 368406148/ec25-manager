@@ -21,6 +21,8 @@ TEMPLATE="$APP_SRC/node_modules/electron/dist/Electron.app"
 
 cd "$ROOT_DIR"
 
+APP_VERSION="$(node -p "require('$APP_SRC/package.json').version")"
+
 echo "==> [1/5] Building Swift helper (release)"
 CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build/module-cache" swift build -c release --scratch-path "$ROOT_DIR/.build"
 HELPER_BIN="$ROOT_DIR/.build/release/EC25Helper"
@@ -50,7 +52,7 @@ cp "$APP_SRC/assets/icon.icns" "$CONTENTS/Resources/EC25Manager.icns"
 # Drop electron's default locale icon so ours is unambiguous.
 rm -f "$CONTENTS/Resources/electron.icns"
 
-cat > "$CONTENTS/Info.plist" <<'PLIST'
+cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -63,8 +65,8 @@ cat > "$CONTENTS/Info.plist" <<'PLIST'
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <key>CFBundleName</key><string>EC25 Manager</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.3.0</string>
-    <key>CFBundleVersion</key><string>3</string>
+    <key>CFBundleShortVersionString</key><string>${APP_VERSION}</string>
+    <key>CFBundleVersion</key><string>${APP_VERSION}</string>
     <key>LSMinimumSystemVersion</key><string>11.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
