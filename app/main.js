@@ -38,6 +38,18 @@ function resolveHelper () {
   return { bin, env: { DYLD_FALLBACK_LIBRARY_PATH: '/opt/homebrew/lib' } }
 }
 
+// Only ever register a login item for the real packaged app. Unpackaged, the
+// "app" is node_modules/electron/dist/Electron.app — registering that makes
+// macOS launch a bare Electron demo window at every login.
+function applyLoginItem (openAtLogin) {
+  if (!app.isPackaged) {
+    // Clean up a stale dev registration from an earlier run, if any.
+    if (app.getLoginItemSettings().openAtLogin) app.setLoginItemSettings({ openAtLogin: false })
+    return
+  }
+  app.setLoginItemSettings({ openAtLogin })
+}
+
 function loadTrayImage (name) {
   const p = path.join(__dirname, 'assets', name + '.png')
   const img = fs.existsSync(p) ? nativeImage.createFromPath(p) : nativeImage.createEmpty()
@@ -223,7 +235,7 @@ function restartTimers () {
 
 function applySettings (partial) {
   const next = settings.update(partial || {})
-  app.setLoginItemSettings({ openAtLogin: !!next.openAtLogin })
+  applyLoginItem(!!next.openAtLogin)
   restartTimers()
   refreshTray()   // apply "hide when disconnected" immediately
   if (win && !win.isDestroyed()) win.webContents.send('settings', next)
@@ -257,7 +269,7 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) app.dock.hide()
 
   settings = new Settings(path.join(app.getPath('userData'), 'settings.json'))
-  app.setLoginItemSettings({ openAtLogin: !!settings.get().openAtLogin })
+  applyLoginItem(!!settings.get().openAtLogin)
 
   for (const n of [0, 1, 2, 3, 4]) trayImages[n] = loadTrayImage('tray-' + n)
   trayImages.off = loadTrayImage('tray-off')
