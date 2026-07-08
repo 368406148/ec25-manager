@@ -376,6 +376,9 @@ class ModemManager extends EventEmitter {
     return this._run(async () => {
       await this._send('AT+CMGF=1')
       await this._send('AT+CSCS="UCS2"')
+      // DCS=8 (UCS2): without this the body ships as GSM 7-bit and the
+      // recipient sees an empty/garbled message.
+      await this._send('AT+CSMP=17,167,0,8').catch(() => {})
       const encodedNumber = UCS2.encode(cleanNumber)
       const encodedBody = UCS2.encode(cleanBody)
       // Payload terminates with Ctrl-Z (0x1A) to submit the message.
@@ -474,6 +477,7 @@ class ModemManager extends EventEmitter {
     await this._send('AT+CMEE=2')
     await this._send('AT+CMGF=1')
     await this._send('AT+CSCS="UCS2"')
+    await this._send('AT+CSMP=17,167,0,8').catch(() => {})   // UCS2 coding for outgoing SMS
     await this._send('AT+CNMI=2,1,0,0,0').catch(() => {})
     await this._refreshInfo()
     await this._refreshMessages()
