@@ -3,6 +3,7 @@
 const { app, Tray, BrowserWindow, ipcMain, nativeImage, Menu, screen, shell, powerMonitor } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const { execFile, execFileSync } = require('child_process')
 const { ModemManager } = require('./src/modem')
 const { Settings } = require('./src/settings')
 
@@ -13,7 +14,13 @@ let settings = null
 let infoTimer = null
 let smsTimer = null
 let recoverTimer = null
+let presenceTimer = null
+let devicePresent = false
 const trayImages = {}
+
+// USB ids of the modem, in the decimal form `ioreg` prints.
+const DEVICE_VID = 0x2c7c   // 11388
+const DEVICE_PID = 0x0125   // 293
 
 const WIN_WIDTH = 440
 const WIN_HEIGHT = 680
@@ -39,19 +46,29 @@ function loadTrayImage (name) {
 }
 
 function trayImageFor (state) {
-  if (!state || !state.connected) return trayImages.off
+  // Slashed "off" icon only when the dongle is truly absent; empty bars while
+  // it's plugged in but still connecting.
+  if (!state || !state.connected) {
+    return devicePresent ? (trayImages[0] ?? trayImages.off) : trayImages.off
+  }
   const bars = Math.max(0, Math.min(4, state.info?.signal?.bars ?? 0))
   return trayImages[bars] ?? trayImages.off
 }
 
-function updateTray (state) {
-  // Optionally hide the menu-bar icon entirely while no modem is connected.
+// Visibility follows real USB presence (fast ioreg poll), so the icon hides the
+// instant the dongle is unplugged and reappears the instant it's plugged in.
+function trayShouldShow () {
   const hideWhenOff = settings && settings.get().hideWhenDisconnected
-  if (hideWhenOff && !state.connected) {
+  return !hideWhenOff || devicePresent
+}
+
+function refreshTray () {
+  if (!trayShouldShow()) {
     if (tray) { if (win) win.hide(); tray.destroy(); tray = null }
     return
   }
   ensureTray()
+  const state = modem.getState()
   tray.setImage(trayImageFor(state))
   const info = state.info || {}
   const parts = state.connected
@@ -59,8 +76,38 @@ function updateTray (state) {
        info.networkLabel && info.networkLabel !== '-' ? info.networkLabel : null,
        info.rsrp && info.rsrp !== '-' ? info.rsrp : (info.signal?.text || null),
        state.unreadCount > 0 ? `${state.unreadCount} 条未读` : null]
-    : ['设备未连接']
+    : (devicePresent ? ['连接中…'] : ['设备未连接'])
   tray.setToolTip('EC25 Manager · ' + parts.filter(Boolean).join(' · '))
+}
+
+// --- fast USB presence detection via ioreg (independent of the modem/helper) ---
+function scanPresent (stdout) {
+  return stdout.includes(`"idVendor" = ${DEVICE_VID}`) && stdout.includes(`"idProduct" = ${DEVICE_PID}`)
+}
+
+function detectPresenceSync () {
+  try {
+    const out = execFileSync('ioreg', ['-rc', 'IOUSBHostDevice', '-l'], { timeout: 3000, maxBuffer: 16 * 1024 * 1024 }).toString()
+    return scanPresent(out)
+  } catch { return false }
+}
+
+function checkPresence () {
+  execFile('ioreg', ['-rc', 'IOUSBHostDevice', '-l'], { timeout: 3000, maxBuffer: 16 * 1024 * 1024 }, (err, stdout) => {
+    if (err) return // transient ioreg failure: keep the last known state
+    const present = scanPresent(stdout)
+    if (present === devicePresent) return
+    devicePresent = present
+    if (present) {
+      // Plugged in: bring the connection back quickly, then show the icon.
+      const s = modem.getState()
+      if (!s.connected && !s.busy) modem.attemptRecover()
+    } else {
+      // Unplugged: reflect removal immediately (don't wait for the AT poll).
+      modem.notifyRemoved()
+    }
+    refreshTray()
+  })
 }
 
 function createWindow () {
@@ -95,7 +142,7 @@ function createWindow () {
   win.on('blur', () => { if (win && !win.webContents.isDevToolsOpened()) win.hide() })
 
   modem.on('update', (state) => {
-    updateTray(state)
+    refreshTray()
     if (win && !win.isDestroyed()) win.webContents.send('state', state)
   })
 }
@@ -144,7 +191,12 @@ function restartTimers () {
   if (infoTimer) { clearInterval(infoTimer); infoTimer = null }
   if (smsTimer) { clearInterval(smsTimer); smsTimer = null }
   if (recoverTimer) { clearInterval(recoverTimer); recoverTimer = null }
+  if (presenceTimer) { clearInterval(presenceTimer); presenceTimer = null }
   const cfg = settings.get()
+
+  // Fast USB presence poll: drives seamless tray hide/show and snappy
+  // connect-on-plug / disconnect-on-unplug.
+  presenceTimer = setInterval(checkPresence, 1500)
 
   // Gentle status polling when connected (user-configurable; less device load).
   const infoMs = Math.max(2, cfg.infoPollSeconds || 12) * 1000
@@ -173,7 +225,7 @@ function applySettings (partial) {
   const next = settings.update(partial || {})
   app.setLoginItemSettings({ openAtLogin: !!next.openAtLogin })
   restartTimers()
-  updateTray(modem.getState())   // apply "hide when disconnected" immediately
+  refreshTray()   // apply "hide when disconnected" immediately
   if (win && !win.isDestroyed()) win.webContents.send('settings', next)
   return next
 }
@@ -215,7 +267,8 @@ app.whenReady().then(() => {
 
   registerIpc()
   createWindow()
-  updateTray(modem.getState())   // creates the tray now unless "hide when disconnected" is on
+  devicePresent = detectPresenceSync()   // seed presence before first tray decision
+  refreshTray()                          // create the tray now unless hidden by setting
   restartTimers()
 
   // After the Mac wakes from sleep the USB modem's ECM interface usually drops;
@@ -237,5 +290,7 @@ app.on('window-all-closed', (e) => {
 app.on('before-quit', () => {
   if (infoTimer) clearInterval(infoTimer)
   if (smsTimer) clearInterval(smsTimer)
+  if (recoverTimer) clearInterval(recoverTimer)
+  if (presenceTimer) clearInterval(presenceTimer)
   if (modem) modem.bridge.stop()
 })

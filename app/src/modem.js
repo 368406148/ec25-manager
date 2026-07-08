@@ -368,6 +368,12 @@ class ModemManager extends EventEmitter {
     this.emitUpdate()
   }
 
+  // Called by the USB presence poll the instant the device leaves the bus, so
+  // the UI/tray reflect removal immediately instead of after the AT poll.
+  notifyRemoved () {
+    if (this.state.connected) this._markDisconnected()
+  }
+
   refreshAll () {
     return this._run(async () => {
       await this._refreshInfo()
