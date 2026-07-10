@@ -3,9 +3,20 @@
 **本项目仅为个人实验用途，严禁用于各类违法用途。使用工具请后果自负。程序完全使用开放的接口实现，没有进行任何逆向研究。**
 
 一个面向移远 Quectel EC25 / Baiwang USB Modem 的 **原生 macOS 菜单栏应用**（Swift + SwiftUI），
-通过 `libusb` 直接访问 AT 接口。相比早期的 Electron 版本，安装包从约 250 MB 降到 **~3 MB**，
+通过 `libusb` 直接访问 AT 接口。相比早期的 Electron 版本，安装包从约 250 MB 降到 **~2.3 MB**，
 内存/CPU 占用大幅降低，无浏览器、无 Node、无独立 helper 进程。UI 采用 SwiftUI + **Liquid Glass**
 （macOS 26+）与过渡动画，自动跟随系统深浅色。
+
+## 下载安装（Apple Silicon）
+
+到 [Releases](../../releases) 下载最新 **`EC25-Manager-<版本>-arm64.dmg`**：
+
+1. 打开 DMG，把 **EC25 Manager** 拖到「应用程序」。
+2. 首次启动：右键图标 → 打开 → 打开
+   （或终端执行 `xattr -dr com.apple.quarantine "/Applications/EC25 Manager.app"`）。
+3. 插入 `2c7c:0125` 模组即可；图标出现在菜单栏。
+
+> 应用为本地 ad-hoc 签名、未做 Apple 公证，故首次打开需上述步骤。仅支持 Apple Silicon。
 
 ## 架构
 
@@ -59,8 +70,3 @@ Tools/make_release.sh             # 额外产出 dmg / zip / SHA256SUMS.txt
 
 连接后依次执行：`AT` · `ATE0` · `AT+CMEE=2` · `AT+CMGF=1` · `AT+CSCS="UCS2"` · `AT+CNMI=2,1,0,0,0`。
 不同固件/运营商的短信存储、字符集、号码格式可能略有差异，可在「终端 / 实时状态」中微调。
-
-## 说明
-
-应用为本地 ad-hoc 签名、未做 Apple 公证；从 GitHub 下载后首次打开需右键→打开
-（或 `xattr -dr com.apple.quarantine "/Applications/EC25 Manager.app"`）。仅 Apple Silicon。
