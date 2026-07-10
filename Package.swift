@@ -27,6 +27,13 @@ let package = Package(
             name: "EC25Manager",
             dependencies: ["CEC25USB"],
             path: "Sources/EC25Manager",
+            swiftSettings: [
+                // CommandLineTools lacks the SwiftUI macro plugin; borrow the one
+                // from Xcode-beta 27 (matches the macOS 27 SDK) so `swift build`
+                // can compile SwiftUI (@State, Liquid Glass, …) without needing
+                // the full Xcode toolchain / license.
+                .unsafeFlags(["-plugin-path", "/Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/swift/host/plugins"])
+            ],
             linkerSettings: [
                 // Let dev runs (.build/release/EC25Manager) find the Homebrew libusb.
                 .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "/opt/homebrew/lib"])

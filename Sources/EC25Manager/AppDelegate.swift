@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import ServiceManagement
+import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -22,7 +23,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Popover hosting the SwiftUI UI.
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 440, height: 620)
-        popover.contentViewController = PopoverController(modem: modem, settings: settings)
+        let host = NSHostingController(rootView: RootView().environmentObject(modem).environmentObject(settings))
+        host.sizingOptions = []
+        popover.contentViewController = host
 
         // Status item.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
