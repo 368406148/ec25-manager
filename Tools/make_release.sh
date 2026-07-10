@@ -12,7 +12,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="EC25 Manager"
 DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
-VERSION="$(node -p "require('$ROOT_DIR/app/package.json').version")"
+VERSION="${EC25_VERSION:-0.4.0}"
 ARCH="$(uname -m)"
 BASE="EC25-Manager-$VERSION-$ARCH"
 DMG="$DIST_DIR/$BASE.dmg"
@@ -20,7 +20,7 @@ ZIP="$DIST_DIR/$BASE.zip"
 
 if [[ "${1:-}" != "--no-build" ]]; then
     echo "==> Building app bundle"
-    "$ROOT_DIR/Tools/package_electron.sh"
+    EC25_VERSION="$VERSION" "$ROOT_DIR/Tools/package_app.sh"
 fi
 [[ -d "$APP_DIR" ]] || { echo "app bundle missing: $APP_DIR"; exit 1; }
 

@@ -4,9 +4,6 @@
 DerivedData/
 *.xcuserstate
 
-# Electron dependencies (installed via `npm install`)
-app/node_modules/
-
 # Build output & release artifacts (produced by Tools/*.sh)
 dist/
 

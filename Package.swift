@@ -1,14 +1,14 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.10
 
 import PackageDescription
 
 let package = Package(
-    name: "EC25Helper",
+    name: "EC25Manager",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "EC25Helper", targets: ["EC25Helper"])
+        .executable(name: "EC25Manager", targets: ["EC25Manager"])
     ],
     targets: [
         .target(
@@ -24,11 +24,11 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "EC25Helper",
+            name: "EC25Manager",
             dependencies: ["CEC25USB"],
-            path: "Sources/EC25Helper",
+            path: "Sources/EC25Manager",
             linkerSettings: [
-                // Let dev runs (.build/release/EC25Helper) find the Homebrew libusb.
+                // Let dev runs (.build/release/EC25Manager) find the Homebrew libusb.
                 .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "/opt/homebrew/lib"])
             ]
         )
