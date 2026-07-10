@@ -65,6 +65,7 @@ struct MessagesView: View {
                 countBadge(c)
             }
             .padding(11).tileBackground()
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -146,9 +147,9 @@ struct MessagesView: View {
     @ViewBuilder private var sendButton: some View {
         let label = Image(systemName: "paperplane.fill").foregroundStyle(.white).frame(width: 40, height: 40)
         if #available(macOS 26.0, *) {
-            Button { send() } label: { label.glassEffect(Glass.regular.tint(Palette.brandC), in: .circle) }.buttonStyle(.plain)
+            Button { send() } label: { label.glassEffect(Glass.regular.tint(Palette.brandC), in: .circle).contentShape(Circle()) }.buttonStyle(.plain)
         } else {
-            Button { send() } label: { label.background(Circle().fill(Palette.brandC)) }.buttonStyle(.plain)
+            Button { send() } label: { label.background(Circle().fill(Palette.brandC)).contentShape(Circle()) }.buttonStyle(.plain)
         }
     }
 
@@ -196,6 +197,7 @@ struct MiniButton: ButtonStyle {
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(accent ? AnyShapeStyle(Palette.brandC) : AnyShapeStyle(Color.primary.opacity(0.06))))
+            .contentShape(Rectangle())
             .opacity(configuration.isPressed ? 0.7 : 1)
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)

@@ -51,6 +51,7 @@ struct FlowChips: View {
                             Text(c).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
                                 .padding(.horizontal, 10).padding(.vertical, 4)
                                 .background(Capsule().fill(Color.primary.opacity(0.06)))
+                                .contentShape(Capsule())
                         }.buttonStyle(.plain)
                     }
                     Spacer(minLength: 0)

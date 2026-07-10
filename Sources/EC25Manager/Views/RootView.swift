@@ -40,6 +40,8 @@ struct RootView: View {
                 Image(systemName: "arrow.clockwise")
                     .rotationEffect(.degrees(modem.busy ? 360 : 0))
                     .animation(modem.busy ? .linear(duration: 0.8).repeatForever(autoreverses: false) : .default, value: modem.busy)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.borderless).help("刷新")
         }
@@ -117,6 +119,7 @@ struct RootView: View {
                                 .matchedGeometryEffect(id: "tabSel", in: tabNS)
                         }
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
