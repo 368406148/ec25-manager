@@ -70,9 +70,3 @@ Tools/make_release.sh             # 额外产出 dmg / zip / SHA256SUMS.txt
 
 连接后依次执行：`AT` · `ATE0` · `AT+CMEE=2` · `AT+CMGF=1` · `AT+CSCS="UCS2"` · `AT+CNMI=2,1,0,0,0`。
 不同固件/运营商的短信存储、字符集、号码格式可能略有差异，可在「终端 / 实时状态」中微调。
-
-## 更新记录
-
-- **0.4.1** — 修复按钮点击区域（此前仅点到文字才响应）：标签页、刷新、会话行、发送、快捷命令等整块可点。
-- **0.4.0** — 抛弃 Electron，改为原生 Swift/SwiftUI 重构；Liquid Glass + 过渡动画；IOKit 事件驱动在位检测；
-  安装包 ~250 MB → ~2.3 MB。
