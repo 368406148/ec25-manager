@@ -26,6 +26,12 @@ extension View {
     func tileBackground(cornerRadius: CGFloat = 11) -> some View {
         modifier(GlassCard(cornerRadius: cornerRadius))
     }
+    /// Rounded input container (text fields / composer).
+    func inputBox(cornerRadius: CGFloat = 10) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return background(shape.fill(Color.primary.opacity(0.06)))
+            .overlay(shape.strokeBorder(Color.primary.opacity(0.11), lineWidth: 1))
+    }
 }
 
 // MARK: - Signal bars (animated)

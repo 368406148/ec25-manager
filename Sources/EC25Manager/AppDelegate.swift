@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Popover hosting the SwiftUI UI.
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 440, height: 620)
+        popover.contentSize = NSSize(width: 440, height: 660)
         let host = NSHostingController(rootView: RootView().environmentObject(modem).environmentObject(settings))
         host.sizingOptions = []
         popover.contentViewController = host

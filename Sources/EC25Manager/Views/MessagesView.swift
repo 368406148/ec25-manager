@@ -134,14 +134,32 @@ struct MessagesView: View {
 
     private var composer: some View {
         VStack(spacing: 8) {
-            TextField("收件人号码", text: $toField).textFieldStyle(.roundedBorder).disabled(activeSender != nil)
+            Divider().opacity(0.25)
+            TextField("收件人号码", text: $toField)
+                .textFieldStyle(.plain).font(.system(size: 13))
+                .padding(.horizontal, 11).padding(.vertical, 8)
+                .inputBox()
+                .disabled(activeSender != nil)
+                .opacity(activeSender != nil ? 0.55 : 1)
             HStack(alignment: .bottom, spacing: 8) {
                 TextField("输入短信内容（支持中文）", text: $bodyField, axis: .vertical)
-                    .textFieldStyle(.roundedBorder).lineLimit(1...3)
+                    .textFieldStyle(.plain).font(.system(size: 13))
+                    .lineLimit(4...10)
+                    .padding(.horizontal, 11).padding(.vertical, 9)
+                    .frame(minHeight: 88, alignment: .topLeading)
+                    .inputBox()
                 sendButton
+                    .disabled(!canSend)
+                    .opacity(canSend ? 1 : 0.4)
+                    .animation(.snappy, value: canSend)
             }
         }
         .padding(.horizontal, 16).padding(.bottom, 12).padding(.top, 6)
+    }
+
+    private var canSend: Bool {
+        !bodyField.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !toField.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     @ViewBuilder private var sendButton: some View {

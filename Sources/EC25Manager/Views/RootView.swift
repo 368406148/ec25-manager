@@ -16,7 +16,7 @@ struct RootView: View {
             Divider().opacity(0.35)
             content
         }
-        .frame(width: 440, height: 620)
+        .frame(width: 440, height: 660)
     }
 
     // MARK: header
