@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="EC25 Manager"
-VERSION="${EC25_VERSION:-0.4.1}"
+VERSION="${EC25_VERSION:-0.4.2}"
 DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 CONTENTS="$APP_DIR/Contents"
